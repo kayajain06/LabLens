@@ -1,0 +1,109 @@
+:root{
+  --accent:#0b66ff;
+  --bg:#f7f9fc;
+  --panel:#ffffff;
+  --text:#0b2540;
+  --muted:#586674;
+  --shadow: 0 6px 18px rgba(11,38,64,0.08);
+  --yellow:#fff7d6;
+  --yellow-border:#ffe58a;
+  --green:#2db34a;
+  --warning:#c59a00;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background:linear-gradient(180deg,var(--bg),#fff);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  line-height:1.45;
+}
+
+.site-header{
+  padding:22px 16px;
+  border-bottom:1px solid #e6eef8;
+  background:linear-gradient(90deg, rgba(11,102,255,0.06), transparent);
+}
+.site-header h1{margin:0 0 6px;font-size:20px}
+.lead{margin:0;color:var(--muted)}
+
+.container{max-width:960px;margin:20px auto;padding:0 16px}
+.panel{background:var(--panel);border-radius:10px;padding:18px;box-shadow:var(--shadow);margin-bottom:16px}
+
+/* grid of small cards */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.card{padding:14px;border-radius:8px;border:1px solid #eef4fb;background:#fff}
+.card h4{margin:0 0 6px;font-size:16px}
+.range-text{color:var(--muted);font-size:13px;margin-bottom:12px}
+.row-note{margin-top:8px;color:var(--muted);font-size:14px}
+
+/* titles interactive */
+.card-title{
+  display:inline-block;
+  cursor:help;
+  color:var(--text);
+  font-weight:700;
+  text-decoration:underline dotted;
+  text-underline-offset:3px;
+  border-radius:4px;
+  padding:2px 4px;
+}
+.card-title:focus{outline:none;box-shadow:0 0 0 4px rgba(11,102,255,0.08)}
+
+/* meter */
+/* remove large left padding; bubble is positioned absolutely based on bar coordinates */
+.meter{position:relative;margin-top:6px}
+.bar{height:12px;border-radius:8px;background:#f1f4f6;overflow:hidden;margin-top:8px;border:1px solid rgba(11,38,64,0.04);position:relative}
+.bar-inner{display:flex;height:100%}
+.bar-green{background:var(--green)}
+.bar-yellow{background:var(--yellow);border-right:1px solid var(--yellow-border)}
+.range-labels{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-top:6px}
+
+/* value bubble: smaller and positioned over the bar using left computed in JS */
+.value-bubble{
+  position:absolute; /* will be moved by JS */
+  top:-22px;
+  transform:translateX(-50%); /* center over calculated point */
+  width:44px;
+  height:28px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-weight:800;
+  font-size:13px;
+  box-shadow:0 6px 14px rgba(8,30,60,0.12);
+}
+.value-normal{background:var(--green)}
+.value-warning{background:var(--warning)}
+
+/* interactive bubble styling */
+.interactive{cursor:help}
+.interactive:focus{outline:none;box-shadow:0 0 0 4px rgba(11,102,255,0.12)}
+
+/* status yellow row */
+.status-yellow{background:linear-gradient(90deg,var(--yellow),#fff);padding:8px;border-radius:6px;margin-top:8px;color:#6a4d00;font-weight:600;border:1px solid var(--yellow-border)}
+
+/* popover */
+.popover{
+  position:fixed;
+  max-width:340px;
+  background:linear-gradient(180deg,#fff,#f8fbff);
+  border-radius:10px;padding:12px;box-shadow:0 10px 30px rgba(8,30,60,0.12);border:1px solid rgba(11,38,64,0.06);
+  z-index:1000;transform-origin:top left;transition:opacity .12s ease, transform .12s ease;opacity:0;pointer-events:none;
+}
+.popover[aria-hidden="false"]{opacity:1;pointer-events:auto}
+.popover h4{margin:0 0 6px;font-size:14px}
+.popover p{margin:0;color:var(--muted);font-size:13px}
+.popover p.action{margin-top:8px;font-weight:700;color:#333}
+
+/* responsive */
+@media (max-width:720px){
+  .grid{grid-template-columns:1fr}
+  .value-bubble{width:40px;height:26px;top:-20px;font-size:12px}
+}
