@@ -1,11 +1,13 @@
 // script.js - position value bubbles along the bar and attach accessible popovers
+// Updated so the green (normal) segment spans exactly from data-min to data-max
+// and yellow segments extend on both sides. Bubbles are centered over the bar
+// and placed according to the numeric value mapped to the extended scale.
 // Requires window.GLOSSARY from glossary.js
 
 (function () {
   const popover = document.getElementById('popover');
   let activeTarget = null;
 
-  // Escape helper
   function escapeHtml(str) {
     return String(str)
       .replace(/&/g, "&amp;")
@@ -13,7 +15,7 @@
       .replace(/>/g, "&gt;");
   }
 
-  // Show glossary popover for titles
+  // Popover helpers
   function showGlossaryFor(target) {
     const key = target.dataset.term;
     const entry = window.GLOSSARY && window.GLOSSARY[key];
@@ -26,7 +28,6 @@
     openPopoverFor(target);
   }
 
-  // Show status popover for value bubble
   function showValueStatusFor(target) {
     const bubbleKey = target.dataset.bubbleTerm;
     const entry = window.GLOSSARY && window.GLOSSARY[bubbleKey];
@@ -53,7 +54,6 @@
     activeTarget = null;
   }
 
-  // Position popover near the target (simple centered-below placement with collision checks)
   function positionPopoverNextTo(target) {
     const rect = target.getBoundingClientRect();
     popover.style.left = '0px';
@@ -76,55 +76,74 @@
     popover.style.top = `${Math.round(top)}px`;
   }
 
-  // Position every bubble along its card's bar according to data-min/data-max and the numeric value
+  // Core: position bars and bubbles
   function positionAllBubbles() {
     const cards = Array.from(document.querySelectorAll('.card'));
     cards.forEach(card => {
       const bar = card.querySelector('.bar');
+      const leftSeg = card.querySelector('.bar-inner .bar-yellow.left');
+      const greenSeg = card.querySelector('.bar-inner .bar-green');
+      const rightSeg = card.querySelector('.bar-inner .bar-yellow.right');
       const bubble = card.querySelector('.value-bubble');
-      if (!bar || !bubble) return;
+
+      if (!bar || !bubble || !leftSeg || !greenSeg || !rightSeg) return;
 
       const min = parseFloat(card.dataset.min);
       const max = parseFloat(card.dataset.max);
       const rawValue = parseFloat(bubble.dataset.value);
 
-      const barRect = bar.getBoundingClientRect();
-      const cardRect = card.getBoundingClientRect();
-
-      // fallback placement if numbers invalid
+      // If invalid numbers, fallback to equal thirds
       if (isNaN(min) || isNaN(max) || isNaN(rawValue) || max === min) {
-        const xDefault = barRect.left - cardRect.left + 6;
-        bubble.style.left = `${Math.round(xDefault)}px`;
-        bubble.style.top = `${Math.round(barRect.top - cardRect.top - (bubble.offsetHeight || 26) / 2)}px`;
+        leftSeg.style.width = '25%';
+        greenSeg.style.width = '50%';
+        rightSeg.style.width = '25%';
+        // place bubble at left quarter as fallback
         bubble.style.position = 'absolute';
+        bubble.style.left = `25%`;
+        bubble.style.top = `${Math.round((bar.getBoundingClientRect().top - card.getBoundingClientRect().top) - (bubble.offsetHeight || 26) / 2)}px`;
         return;
       }
 
-      // clamp slightly beyond edges so extreme values still show near ends
-      const margin = (max - min) * 0.02; // 2% margin
-      const clamped = Math.max(min - margin, Math.min(max + margin, rawValue));
+      // Decide extension on both sides (choose half the normal width so green occupies ~50% by default)
+      const normalWidth = max - min;
+      const extension = Math.max(normalWidth * 0.5, normalWidth * 0.25); // at least 25% but ideally 50%
+      const spanStart = min - extension;    // left-most value shown on the bar
+      const spanEnd = max + extension;      // right-most value shown on the bar
+      const totalSpan = spanEnd - spanStart;
 
-      // fraction across the bar
-      let frac = (clamped - min) / (max - min);
-      frac = Math.max(0, Math.min(1, frac));
+      const barRect = bar.getBoundingClientRect();
 
+      // Compute percentages for the three segments (left yellow, green, right yellow)
+      const leftPct = ((min - spanStart) / totalSpan) * 100;
+      const greenPct = ((max - min) / totalSpan) * 100;
+      const rightPct = ((spanEnd - max) / totalSpan) * 100;
+
+      // Apply segment widths
+      leftSeg.style.width = `${leftPct}%`;
+      greenSeg.style.width = `${greenPct}%`;
+      rightSeg.style.width = `${rightPct}%`;
+
+      // Compute bubble position: map rawValue onto spanStart..spanEnd
+      const clamped = Math.max(spanStart, Math.min(spanEnd, rawValue));
+      const frac = (clamped - spanStart) / totalSpan;
       const availableWidth = barRect.width;
-      // x relative to card left
+      const cardRect = card.getBoundingClientRect();
+
       const x = (barRect.left - cardRect.left) + frac * availableWidth;
 
-      // compute top so the bubble vertically overlaps the bar (centered on the bar)
+      // vertically center bubble on the bar (so it overlaps)
       const bubbleHeight = bubble.offsetHeight || 26;
       const barCenterRelativeToCard = (barRect.top - cardRect.top) + (barRect.height / 2);
       const top = Math.round(barCenterRelativeToCard - (bubbleHeight / 2));
 
+      bubble.style.position = 'absolute';
       bubble.style.left = `${Math.round(x)}px`;
       bubble.style.top = `${top}px`;
-      bubble.style.position = 'absolute';
     });
   }
 
-  // Attach interactions to titles and value bubbles
   function initInteractions() {
+    // Titles
     const titles = Array.from(document.querySelectorAll('.card-title'));
     titles.forEach(title => {
       title.addEventListener('mouseenter', () => showGlossaryFor(title));
@@ -139,6 +158,7 @@
       title.setAttribute('role', 'button');
     });
 
+    // Bubbles
     const bubbles = Array.from(document.querySelectorAll('.value-bubble.interactive'));
     bubbles.forEach(bubble => {
       bubble.addEventListener('mouseenter', () => showValueStatusFor(bubble));
@@ -167,7 +187,7 @@
       setTimeout(() => { if (!activeTarget || !activeTarget.matches(':hover')) hidePopover(); }, 120);
     });
 
-    // keyboard: Escape to close; Enter/Space toggle
+    // keyboard support
     document.addEventListener('keydown', (ev) => {
       if (ev.key === 'Escape') {
         hidePopover();
@@ -188,15 +208,13 @@
     });
   }
 
-  // Initialize everything
   function init() {
     initInteractions();
-    // position after layout
     positionAllBubbles();
     // reposition on resize/scroll
     window.addEventListener('resize', positionAllBubbles);
     window.addEventListener('scroll', positionAllBubbles, true);
-    // extra safety after fonts load
+    // ensure correct after fonts/images
     setTimeout(positionAllBubbles, 300);
   }
 
