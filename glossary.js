@@ -1,7 +1,8 @@
 // Glossary data for the LabLens demo.
 // Keys correspond to data-term attributes in the markup.
+// Expose the glossary on window so other scripts can read it.
 
-const GLOSSARY = {
+window.GLOSSARY = {
   "hemoglobin": {
     "title": "Hemoglobin",
     "text": "A protein in red blood cells that carries oxygen. Low hemoglobin can cause tiredness or shortness of breath.",
