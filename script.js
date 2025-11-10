@@ -1,11 +1,11 @@
-// script.js - updated to position the value bubble along the bar according to the numeric value
+// script.js - position value bubbles along the bar and attach accessible popovers
 // Requires GLOSSARY from glossary.js
 
 (function () {
   const popover = document.getElementById('popover');
   let activeTarget = null;
 
-  // Utility: escape HTML
+  // Escape helper
   function escapeHtml(str) {
     return String(str)
       .replace(/&/g, "&amp;")
@@ -13,26 +13,34 @@
       .replace(/>/g, "&gt;");
   }
 
-  // Show glossary for titles
+  // Show glossary popover for titles
   function showGlossaryFor(target) {
     const key = target.dataset.term;
-    const entry = GLOSSARY[key];
+    const entry = window.GLOSSARY && window.GLOSSARY[key];
     if (!entry) return;
-    popover.innerHTML = `\n      <h4>${escapeHtml(entry.title)}</h4>\n      <p>${escapeHtml(entry.text)}</p>\n      ${entry.action ? `<p class="action">${escapeHtml(entry.action)}</p>` : ''}\n    `;
-    popover.setAttribute('aria-hidden', 'false');
-    positionPopoverNextTo(target);
-    activeTarget = target;
-    target.setAttribute('aria-describedby', 'popover');
+    popover.innerHTML = `
+      <h4>${escapeHtml(entry.title)}</h4>
+      <p>${escapeHtml(entry.text)}</p>
+      ${entry.action ? `<p class="action">${escapeHtml(entry.action)}</p>` : ''}
+    `;
+    openPopoverFor(target);
   }
 
-  // Show bubble status for value bubbles
+  // Show status popover for value bubble
   function showValueStatusFor(target) {
     const bubbleKey = target.dataset.bubbleTerm;
-    const entry = GLOSSARY[bubbleKey];
+    const entry = window.GLOSSARY && window.GLOSSARY[bubbleKey];
     if (!entry) return;
     const state = target.dataset.valueState || 'normal';
     const text = state === 'normal' ? (entry.text_normal || '') : (entry.text_warning || entry.text_normal || '');
-    popover.innerHTML = `\n      <h4>${escapeHtml(entry.title)}</h4>\n      <p>${escapeHtml(text)}</p>\n    `;
+    popover.innerHTML = `
+      <h4>${escapeHtml(entry.title)}</h4>
+      <p>${escapeHtml(text)}</p>
+    `;
+    openPopoverFor(target);
+  }
+
+  function openPopoverFor(target) {
     popover.setAttribute('aria-hidden', 'false');
     positionPopoverNextTo(target);
     activeTarget = target;
@@ -45,7 +53,7 @@
     activeTarget = null;
   }
 
-  // Position popover near the target
+  // Position popover near the target (simple centered-below placement with collision checks)
   function positionPopoverNextTo(target) {
     const rect = target.getBoundingClientRect();
     popover.style.left = '0px';
@@ -68,7 +76,7 @@
     popover.style.top = `${Math.round(top)}px`;
   }
 
-  // Place each bubble along its card's bar according to the value and min/max
+  // Position every bubble along its card's bar according to data-min/data-max and the numeric value
   function positionAllBubbles() {
     const cards = Array.from(document.querySelectorAll('.card'));
     cards.forEach(card => {
@@ -76,54 +84,42 @@
       const bubble = card.querySelector('.value-bubble');
       if (!bar || !bubble) return;
 
-      const minAttr = card.dataset.min;
-      const maxAttr = card.dataset.max;
-      const valueAttr = bubble.dataset.value;
+      const min = parseFloat(card.dataset.min);
+      const max = parseFloat(card.dataset.max);
+      const rawValue = parseFloat(bubble.dataset.value);
 
-      const min = parseFloat(minAttr);
-      const max = parseFloat(maxAttr);
-      const rawValue = parseFloat(valueAttr);
-
-      // If min/max/value are invalid, fallback to placing bubble at left
-      if (isNaN(min) || isNaN(max) || isNaN(rawValue) || max === min) {
-        // place bubble at start of bar (left)
-        const barRect = bar.getBoundingClientRect();
-        bubble.style.left = `${barRect.left + 8}px`;
-        bubble.style.position = 'absolute';
-        bubble.style.top = `${barRect.top - card.getBoundingClientRect().top - 22}px`;
-        return;
-      }
-
-      // Clamp value between min and max, but allow values slightly outside to be clamped to ends
-      const clamped = Math.max(Math.min(rawValue, max + (max - min) * 0.1), min - (max - min) * 0.1);
-
-      // Determine percent across the bar (0..1)
-      const percent = (clamped - min) / (max - min);
-
-      // Compute pixel position relative to bar container
       const barRect = bar.getBoundingClientRect();
       const cardRect = card.getBoundingClientRect();
 
-      // Inner available width (exclude 2px border)
+      // fallback placement if numbers invalid
+      if (isNaN(min) || isNaN(max) || isNaN(rawValue) || max === min) {
+        const xDefault = barRect.left - cardRect.left + 6;
+        bubble.style.left = `${Math.round(xDefault)}px`;
+        bubble.style.top = `${Math.round(barRect.top - cardRect.top - 20)}px`;
+        bubble.style.position = 'absolute';
+        return;
+      }
+
+      // clamp slightly beyond edges so extreme values still show near ends
+      const margin = (max - min) * 0.02; // 2% margin
+      const clamped = Math.max(min - margin, Math.min(max + margin, rawValue));
+
+      // fraction across the bar
+      let frac = (clamped - min) / (max - min);
+      frac = Math.max(0, Math.min(1, frac));
+
       const availableWidth = barRect.width;
+      // x relative to card left
+      const x = (barRect.left - cardRect.left) + frac * availableWidth;
 
-      // left position relative to card (bubble is positioned absolute inside .card)
-      const x = barRect.left - cardRect.left + (percent * availableWidth);
-
-      // Set bubble position (centered at x)
       bubble.style.left = `${Math.round(x)}px`;
-      // Ensure bubble is absolutely positioned inside card
+      bubble.style.top = `${Math.round(barRect.top - cardRect.top - 20)}px`;
       bubble.style.position = 'absolute';
-      // Set top relative to card so it sits above the bar
-      const barTopRelative = barRect.top - cardRect.top;
-      bubble.style.top = `${Math.round(barTopRelative - 22)}px`;
-      // add transform to center horizontally (CSS already uses translateX(-50%)
     });
   }
 
-  // Attach interactions for titles and bubbles
+  // Attach interactions to titles and value bubbles
   function initInteractions() {
-    // Titles
     const titles = Array.from(document.querySelectorAll('.card-title'));
     titles.forEach(title => {
       title.addEventListener('mouseenter', () => showGlossaryFor(title));
@@ -135,9 +131,9 @@
         const isOpen = popover.getAttribute('aria-hidden') === 'false' && activeTarget === title;
         if (isOpen) hidePopover(); else showGlossaryFor(title);
       });
+      title.setAttribute('role', 'button');
     });
 
-    // Bubbles
     const bubbles = Array.from(document.querySelectorAll('.value-bubble.interactive'));
     bubbles.forEach(bubble => {
       bubble.addEventListener('mouseenter', () => showValueStatusFor(bubble));
@@ -149,9 +145,10 @@
         const isOpen = popover.getAttribute('aria-hidden') === 'false' && activeTarget === bubble;
         if (isOpen) hidePopover(); else showValueStatusFor(bubble);
       });
+      bubble.setAttribute('role', 'button');
     });
 
-    // Click outside closes popover
+    // clicking outside closes
     document.addEventListener('click', (ev) => {
       if (popover.getAttribute('aria-hidden') === 'false') {
         const path = ev.composedPath ? ev.composedPath() : (ev.path || []);
@@ -161,10 +158,11 @@
       }
     });
 
-    // Keep popover open when hovering it
-    popover.addEventListener('mouseleave', () => setTimeout(() => { if (!activeTarget || !activeTarget.matches(':hover')) hidePopover(); }, 120));
+    popover.addEventListener('mouseleave', () => {
+      setTimeout(() => { if (!activeTarget || !activeTarget.matches(':hover')) hidePopover(); }, 120);
+    });
 
-    // Keyboard support
+    // keyboard: Escape to close; Enter/Space toggle
     document.addEventListener('keydown', (ev) => {
       if (ev.key === 'Escape') {
         hidePopover();
@@ -188,14 +186,12 @@
   // Initialize everything
   function init() {
     initInteractions();
-    // Position bubbles after layout completes
+    // position after layout
     positionAllBubbles();
-
-    // Reposition on resize and scroll (use passive listeners)
-    window.addEventListener('resize', () => positionAllBubbles());
-    window.addEventListener('scroll', () => positionAllBubbles(), true);
-
-    // Also reposition after fonts/images might load
+    // reposition on resize/scroll
+    window.addEventListener('resize', positionAllBubbles);
+    window.addEventListener('scroll', positionAllBubbles, true);
+    // extra safety after fonts load
     setTimeout(positionAllBubbles, 300);
   }
 
