@@ -36,7 +36,7 @@ body{
 
 /* grid of small cards */
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-.card{padding:14px;border-radius:8px;border:1px solid #eef4fb;background:#fff}
+.card{padding:14px;border-radius:8px;border:1px solid #eef4fb;background:#fff;position:relative}
 .card h4{margin:0 0 6px;font-size:16px}
 .range-text{color:var(--muted);font-size:13px;margin-bottom:12px}
 .row-note{margin-top:8px;color:var(--muted);font-size:14px}
@@ -55,7 +55,6 @@ body{
 .card-title:focus{outline:none;box-shadow:0 0 0 4px rgba(11,102,255,0.08)}
 
 /* meter */
-/* remove large left padding; bubble is positioned absolutely based on bar coordinates */
 .meter{position:relative;margin-top:6px}
 .bar{height:12px;border-radius:8px;background:#f1f4f6;overflow:hidden;margin-top:8px;border:1px solid rgba(11,38,64,0.04);position:relative}
 .bar-inner{display:flex;height:100%}
@@ -65,20 +64,35 @@ body{
 
 /* value bubble: smaller and positioned over the bar using left computed in JS */
 .value-bubble{
-  position:absolute; /* will be moved by JS */
+  position:absolute; /* JS will set left/top relative to the card */
   top:-22px;
-  transform:translateX(-50%); /* center over calculated point */
-  width:44px;
-  height:28px;
-  border-radius:14px;
+  transform:translateX(-50%); /* center horizontally over the computed x */
+  width:40px;
+  height:26px;
+  border-radius:13px;
   display:flex;
   align-items:center;
   justify-content:center;
   color:#fff;
   font-weight:800;
-  font-size:13px;
+  font-size:12px;
   box-shadow:0 6px 14px rgba(8,30,60,0.12);
 }
+
+/* little triangle pointer under bubble (visual match to screenshot) */
+.value-bubble::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  width:0;height:0;
+  border-left:7px solid transparent;
+  border-right:7px solid transparent;
+  border-top:8px solid rgba(0,0,0,0.12);
+  bottom:-8px;
+  filter: drop-shadow(0 1px 0 rgba(255,255,255,0.12));
+}
+
 .value-normal{background:var(--green)}
 .value-warning{background:var(--warning)}
 
@@ -86,7 +100,7 @@ body{
 .interactive{cursor:help}
 .interactive:focus{outline:none;box-shadow:0 0 0 4px rgba(11,102,255,0.12)}
 
-/* status yellow row */
+/* status yellow row (kept for other use) */
 .status-yellow{background:linear-gradient(90deg,var(--yellow),#fff);padding:8px;border-radius:6px;margin-top:8px;color:#6a4d00;font-weight:600;border:1px solid var(--yellow-border)}
 
 /* popover */
@@ -105,5 +119,5 @@ body{
 /* responsive */
 @media (max-width:720px){
   .grid{grid-template-columns:1fr}
-  .value-bubble{width:40px;height:26px;top:-20px;font-size:12px}
+  .value-bubble{width:36px;height:24px;top:-20px;font-size:11px}
 }
