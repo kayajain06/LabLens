@@ -1,5 +1,5 @@
 // script.js - position value bubbles along the bar and attach accessible popovers
-// Requires GLOSSARY from glossary.js
+// Requires window.GLOSSARY from glossary.js
 
 (function () {
   const popover = document.getElementById('popover');
@@ -95,7 +95,7 @@
       if (isNaN(min) || isNaN(max) || isNaN(rawValue) || max === min) {
         const xDefault = barRect.left - cardRect.left + 6;
         bubble.style.left = `${Math.round(xDefault)}px`;
-        bubble.style.top = `${Math.round(barRect.top - cardRect.top - 20)}px`;
+        bubble.style.top = `${Math.round(barRect.top - cardRect.top - (bubble.offsetHeight || 26) / 2)}px`;
         bubble.style.position = 'absolute';
         return;
       }
@@ -112,8 +112,13 @@
       // x relative to card left
       const x = (barRect.left - cardRect.left) + frac * availableWidth;
 
+      // compute top so the bubble vertically overlaps the bar (centered on the bar)
+      const bubbleHeight = bubble.offsetHeight || 26;
+      const barCenterRelativeToCard = (barRect.top - cardRect.top) + (barRect.height / 2);
+      const top = Math.round(barCenterRelativeToCard - (bubbleHeight / 2));
+
       bubble.style.left = `${Math.round(x)}px`;
-      bubble.style.top = `${Math.round(barRect.top - cardRect.top - 20)}px`;
+      bubble.style.top = `${top}px`;
       bubble.style.position = 'absolute';
     });
   }
