@@ -65,7 +65,7 @@ body{
 /* value bubble: smaller and positioned over the bar using left computed in JS */
 .value-bubble{
   position:absolute; /* JS will set left/top relative to the card */
-  top:-22px;
+  top:0;               /* JS overrides top to place bubble overlapping the bar */
   transform:translateX(-50%); /* center horizontally over the computed x */
   width:40px;
   height:26px;
@@ -77,6 +77,7 @@ body{
   font-weight:800;
   font-size:12px;
   box-shadow:0 6px 14px rgba(8,30,60,0.12);
+  z-index:3; /* ensure bubble sits above the bar */
 }
 
 /* little triangle pointer under bubble (visual match to screenshot) */
@@ -109,7 +110,7 @@ body{
   max-width:340px;
   background:linear-gradient(180deg,#fff,#f8fbff);
   border-radius:10px;padding:12px;box-shadow:0 10px 30px rgba(8,30,60,0.12);border:1px solid rgba(11,38,64,0.06);
-  z-index:1000;transform-origin:top left;transition:opacity .12s ease, transform .12s ease;opacity:0;pointer-events:none;
+  z-index:2000;transform-origin:top left;transition:opacity .12s ease, transform .12s ease;opacity:0;pointer-events:none;
 }
 .popover[aria-hidden="false"]{opacity:1;pointer-events:auto}
 .popover h4{margin:0 0 6px;font-size:14px}
@@ -119,5 +120,5 @@ body{
 /* responsive */
 @media (max-width:720px){
   .grid{grid-template-columns:1fr}
-  .value-bubble{width:36px;height:24px;top:-20px;font-size:11px}
+  .value-bubble{width:36px;height:24px;top:0;font-size:11px}
 }
