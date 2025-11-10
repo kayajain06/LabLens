@@ -95,7 +95,7 @@
       if (isNaN(min) || isNaN(max) || isNaN(rawValue) || max === min) {
         const xDefault = barRect.left - cardRect.left + 6;
         bubble.style.left = `${Math.round(xDefault)}px`;
-        bubble.style.top = `${Math.round(barRect.top - cardRect.top - ((bubble.offsetHeight || 26) / 2) - 6)}px`;`;
+        bubble.style.top = `${Math.round(barRect.top - cardRect.top - (bubble.offsetHeight || 26) / 2)}px`;
         bubble.style.position = 'absolute';
         return;
       }
