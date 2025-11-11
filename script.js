@@ -1,9 +1,8 @@
-// script.js - positions value bubbles on the bar and attaches accessible popovers.
-// The green (normal) segment spans exactly from data-min to data-max.
-// Yellow segments extend on both sides using an extended numeric scale:
-//   [min - 1.5 * (max - min), max + 1.5 * (max - min)]
-// Bubbles sit above the bar and are mapped to this full span.
-// Requires window.GLOSSARY from glossary.js.
+// script.js - position value bubbles along the bar and attach accessible popovers
+// Updated so the green (normal) segment spans exactly from data-min to data-max
+// and yellow segments extend on both sides. Bubbles are centered above the bar
+// and placed according to the numeric value mapped to the extended scale.
+// Requires window.GLOSSARY from glossary.js
 
 (function () {
   const popover = document.getElementById('popover');
@@ -16,9 +15,11 @@
       .replace(/>/g, "&gt;");
   }
 
-  // -------- Popover helpers --------
-
-  function renderPopoverContent(entry) {
+  // Popover helpers
+  function showGlossaryFor(target) {
+    const key = target.dataset.term;
+    const entry = window.GLOSSARY && window.GLOSSARY[key];
+    if (!entry) return;
     popover.innerHTML = `
       <h4>${escapeHtml(entry.title)}</h4>
       <p>${escapeHtml(entry.text)}</p>
@@ -28,16 +29,7 @@
           : ""
       }
     `;
-  }
-
-  function showPopoverFor(target) {
-    const key = target.dataset.term;
-    if (!key || !window.GLOSSARY) return;
-    const entry = window.GLOSSARY[key];
-    if (!entry) return;
-
-    renderPopoverContent(entry);
-    popover.setAttribute("aria-hidden", "false");
+    popover.setAttribute('aria-hidden', 'false');
     activeTarget = target;
 
     const rect = target.getBoundingClientRect();
@@ -51,31 +43,30 @@
     if (left > maxLeft) left = maxLeft;
     if (left < 8) left = 8;
 
-    // if too close to bottom, show above the target instead
+    // and vertically (if near bottom, show above)
     if (top + popRect.height + 8 > window.innerHeight) {
       top = rect.top - popRect.height - 8;
     }
 
+    popover.style.transform = 'scale(1)';
     popover.style.top = `${Math.round(top)}px`;
     popover.style.left = `${Math.round(left)}px`;
   }
 
   function hidePopover() {
-    popover.setAttribute("aria-hidden", "true");
+    popover.setAttribute('aria-hidden', 'true');
+    popover.style.transform = 'scale(.96)';
     activeTarget = null;
   }
 
-  // -------- Bubble + bar layout --------
-
   function positionAllBubbles() {
-    const cards = Array.from(document.querySelectorAll(".card"));
-
-    cards.forEach((card) => {
-      const bar = card.querySelector(".bar");
-      const leftSeg = card.querySelector(".bar-inner .bar-yellow.left");
-      const greenSeg = card.querySelector(".bar-inner .bar-green");
-      const rightSeg = card.querySelector(".bar-inner .bar-yellow.right");
-      const bubble = card.querySelector(".value-bubble");
+    const cards = Array.from(document.querySelectorAll('.card'));
+    cards.forEach(card => {
+      const bar = card.querySelector('.bar');
+      const leftSeg = card.querySelector('.bar-inner .bar-yellow.left');
+      const greenSeg = card.querySelector('.bar-inner .bar-green');
+      const rightSeg = card.querySelector('.bar-inner .bar-yellow.right');
+      const bubble = card.querySelector('.value-bubble');
 
       if (!bar || !bubble || !leftSeg || !greenSeg || !rightSeg) return;
 
@@ -86,156 +77,148 @@
       const barRect = bar.getBoundingClientRect();
       const cardRect = card.getBoundingClientRect();
 
-      // Fallback layout if values are missing/invalid
-      if (
-        isNaN(min) ||
-        isNaN(max) ||
-        isNaN(rawValue) ||
-        max === min
-      ) {
-        leftSeg.style.width = "25%";
-        greenSeg.style.width = "50%";
-        rightSeg.style.width = "25%";
+      // Fallback if numbers are not usable
+      if (isNaN(min) || isNaN(max) || isNaN(rawValue) || max === min) {
+        leftSeg.style.width = '25%';
+        greenSeg.style.width = '50%';
+        rightSeg.style.width = '25%';
 
         const bubbleHeight = bubble.offsetHeight || 26;
         const arrowHeight = 8;
+        const gap = 2;
+        const xFallback = (barRect.left - cardRect.left) + (barRect.width / 2);
+        const topFallback = (barRect.top - cardRect.top) - bubbleHeight - arrowHeight + gap;
 
-        const barTopInCard = barRect.top - cardRect.top;
-        const barLeftInCard = barRect.left - cardRect.left;
-        const centerX = barLeftInCard + barRect.width / 2;
-
-        const top =
-          barTopInCard - bubbleHeight - arrowHeight;
-
-        bubble.style.position = "absolute";
-        bubble.style.left = `${Math.round(centerX)}px`;
-        bubble.style.top = `${Math.round(top)}px`;
+        bubble.style.position = 'absolute';
+        bubble.style.left = `${Math.round(xFallback)}px`;
+        bubble.style.top = `${Math.round(topFallback)}px`;
         return;
       }
 
+      // Normal range width
       const normalWidth = max - min;
-      const extension = normalWidth * 1.5;
 
-      // Extended numeric span for the whole bar
+      // Extend bar to cover out-of-range values:
+      // full span = [min - 1.5*(max-min), max + 1.5*(max-min)]
+      const extension = normalWidth * 1.5;
       const spanStart = min - extension;
       const spanEnd = max + extension;
       const totalSpan = spanEnd - spanStart;
 
-      // Fractions where the normal range begins/ends within that span
+      // Fractions where the normal range begins/ends within the full span
       const minFrac = (min - spanStart) / totalSpan;
       const maxFrac = (max - spanStart) / totalSpan;
 
-      const leftPct = minFrac * 100;
+      const leftPct  = minFrac * 100;
       const greenPct = (maxFrac - minFrac) * 100;
       const rightPct = 100 - leftPct - greenPct;
 
-      // Set yellow–green–yellow segment widths
+      // Apply segment widths (left yellow, green, right yellow)
       leftSeg.style.width = `${leftPct}%`;
       greenSeg.style.width = `${greenPct}%`;
       rightSeg.style.width = `${rightPct}%`;
 
-      // ---- Range labels under edges of green ----
-      const labelsContainer = card.querySelector(".range-labels");
+      // Position the normal range labels under the edges of the green segment
+      const labelsContainer = card.querySelector('.range-labels');
       if (labelsContainer) {
-        const labelSpans = labelsContainer.querySelectorAll("span");
+        const labelSpans = labelsContainer.querySelectorAll('span');
         if (labelSpans.length >= 2) {
           const labelsRect = labelsContainer.getBoundingClientRect();
+          const offsetCardToLabelsLeft = labelsRect.left - cardRect.left;
+          const availableWidth = barRect.width;
 
-          const barLeftInCard = barRect.left - cardRect.left;
-          const labelsLeftInCard = labelsRect.left - cardRect.left;
-          const offset = barLeftInCard - labelsLeftInCard;
-          const barWidth = barRect.width;
+          const minX = (barRect.left - cardRect.left) + minFrac * availableWidth - offsetCardToLabelsLeft;
+          const maxX = (barRect.left - cardRect.left) + maxFrac * availableWidth - offsetCardToLabelsLeft;
 
-          const minX = offset + minFrac * barWidth;
-          const maxX = offset + maxFrac * barWidth;
-
-          labelSpans[0].style.position = "absolute";
+          labelSpans[0].style.position = 'absolute';
           labelSpans[0].style.left = `${Math.round(minX)}px`;
 
-          labelSpans[1].style.position = "absolute";
+          labelSpans[1].style.position = 'absolute';
           labelSpans[1].style.left = `${Math.round(maxX)}px`;
         }
       }
 
-      // ---- Bubble position above bar ----
-
-      // Map value onto extended span, clamped to edges
+      // Compute bubble position: map rawValue onto spanStart..spanEnd and clamp
       const clamped = Math.max(spanStart, Math.min(spanEnd, rawValue));
       const frac = (clamped - spanStart) / totalSpan;
+      const availableWidthForBubble = barRect.width;
+      const x = (barRect.left - cardRect.left) + frac * availableWidthForBubble;
 
-      const barLeftInCard = barRect.left - cardRect.left;
-      const barTopInCard = barRect.top - cardRect.top;
-      const barWidth = barRect.width;
-
-      const centerX = barLeftInCard + frac * barWidth;
-
+      // Place bubble just ABOVE the bar, pointer aimed at bar
       const bubbleHeight = bubble.offsetHeight || 26;
-      const arrowHeight = 8; // must match the CSS triangle size
-      const top =
-        barTopInCard - bubbleHeight - arrowHeight; // guaranteed ABOVE the bar
+      const arrowHeight = 8;
+      const gap = 2;
+      const top = (barRect.top - cardRect.top) - bubbleHeight - arrowHeight + gap;
 
-      bubble.style.position = "absolute";
-      bubble.style.left = `${Math.round(centerX)}px`;
+      bubble.style.position = 'absolute';
+      bubble.style.left = `${Math.round(x)}px`;
       bubble.style.top = `${Math.round(top)}px`;
     });
   }
 
-  // -------- Interaction wiring --------
-
   function initInteractions() {
     // Titles
-    const titles = Array.from(document.querySelectorAll(".card-title"));
-    titles.forEach((title) => {
-      title.addEventListener("mouseenter", () => showPopoverFor(title));
-      title.addEventListener("mouseleave", () => {
-        setTimeout(() => {
-          if (!popover.matches(":hover")) hidePopover();
-        }, 120);
-      });
-      title.addEventListener("focus", () => showPopoverFor(title));
-      title.addEventListener("blur", () => hidePopover());
-      title.addEventListener("click", (ev) => {
+    const titles = Array.from(document.querySelectorAll('.card-title'));
+    titles.forEach(title => {
+      title.addEventListener('mouseenter', () => showGlossaryFor(title));
+      title.addEventListener('mouseleave', () => setTimeout(() => { if (!popover.matches(':hover')) hidePopover(); }, 120));
+      title.addEventListener('focus', () => showGlossaryFor(title));
+      title.addEventListener('blur', () => hidePopover());
+      title.addEventListener('click', (ev) => {
         ev.preventDefault();
-        const isOpen =
-          popover.getAttribute("aria-hidden") === "false" &&
-          activeTarget === title;
-        if (isOpen) hidePopover();
-        else showPopoverFor(title);
+        const isOpen = popover.getAttribute('aria-hidden') === 'false' && activeTarget === title;
+        if (isOpen) {
+          hidePopover();
+        } else {
+          showGlossaryFor(title);
+        }
       });
     });
 
-    // Value bubbles with descriptions
-    const bubbles = Array.from(
-      document.querySelectorAll(".value-bubble.interactive")
-    );
-    bubbles.forEach((bubble) => {
-      bubble.addEventListener("mouseenter", () => showPopoverFor(bubble));
-      bubble.addEventListener("mouseleave", () => {
-        setTimeout(() => {
-          if (!popover.matches(":hover")) hidePopover();
-        }, 120);
-      });
-      bubble.addEventListener("focus", () => showPopoverFor(bubble));
-      bubble.addEventListener("blur", () => hidePopover());
-      bubble.addEventListener("click", (ev) => {
+    // Value bubbles
+    const bubbles = Array.from(document.querySelectorAll('.value-bubble.interactive'));
+    bubbles.forEach(bubble => {
+      bubble.addEventListener('mouseenter', () => showGlossaryFor(bubble));
+      bubble.addEventListener('mouseleave', () => setTimeout(() => { if (!popover.matches(':hover')) hidePopover(); }, 120));
+      bubble.addEventListener('focus', () => showGlossaryFor(bubble));
+      bubble.addEventListener('blur', () => hidePopover());
+      bubble.addEventListener('click', (ev) => {
         ev.preventDefault();
-        const isOpen =
-          popover.getAttribute("aria-hidden") === "false" &&
-          activeTarget === bubble;
-        if (isOpen) hidePopover();
-        else showPopoverFor(bubble);
+        const isOpen = popover.getAttribute('aria-hidden') === 'false' && activeTarget === bubble;
+        if (isOpen) {
+          hidePopover();
+        } else {
+          showGlossaryFor(bubble);
+        }
       });
     });
 
-    // Clicking outside closes the popover
-    document.addEventListener("click", (ev) => {
+    // Hide popover when clicking outside
+    document.addEventListener('click', (ev) => {
       if (!activeTarget) return;
-      if (
-        activeTarget.contains(ev.target) ||
-        popover.contains(ev.target)
-      ) {
-        return;
-      }
+      if (activeTarget.contains(ev.target) || popover.contains(ev.target)) return;
       hidePopover();
     });
 
+    // Esc key closes
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') hidePopover();
+    });
+  }
+
+  function init() {
+    initInteractions();
+    positionAllBubbles();
+    // reposition on resize/scroll
+    window.addEventListener('resize', positionAllBubbles);
+    window.addEventListener('scroll', positionAllBubbles, true);
+    // ensure correct after fonts/images
+    setTimeout(positionAllBubbles, 300);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
