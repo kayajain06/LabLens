@@ -9,15 +9,87 @@
 <body>
   <header class="site-header">
     <h1>LabLens — Sample Bloodwork Portal</h1>
-    <p class="lead">Your recent bloodwork snapshot. Hover or focus any title or number to see a plain-language explanation or recommendation.</p>
+    <p class="lead">
+      Your recent bloodwork snapshot. Hover or focus the
+      <span class="lead-highlight">underlined test names</span>
+      and the <span class="lead-highlight">result numbers</span>
+      to see a plain-language explanation or recommendation.
+    </p>
   </header>
 
   <main class="container" id="main">
     <section class="panel grid">
 
+      <!-- White Blood Cells -->
+      <div class="card" data-min="4.5" data-max="13.5">
+        <h4 class="card-title" data-term="wbc" tabindex="0" role="button" aria-haspopup="true">White Blood Cells</h4>
+
+        <div class="range-text">Normal range: 4.5 - 13.5 10*3/uL</div>
+
+        <div class="meter">
+          <div class="bar" aria-hidden="true">
+            <div class="bar-inner">
+              <div class="bar-yellow left"></div>
+              <div class="bar-green"></div>
+              <div class="bar-yellow right"></div>
+            </div>
+          </div>
+
+          <div
+            class="value-bubble value-normal interactive"
+            data-bubble-term="wbc_value"
+            data-value="7.7"
+            tabindex="0"
+            role="button"
+            aria-haspopup="true"
+          >
+            7.7
+          </div>
+
+          <div class="range-labels">
+            <span>4.5</span>
+            <span>13.5</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Red Blood Cells -->
+      <div class="card" data-min="3.8" data-max="5.3">
+        <h4 class="card-title" data-term="rbc" tabindex="0" role="button" aria-haspopup="true">Red Blood Cells</h4>
+
+        <div class="range-text">Normal range: 3.80 - 5.30 10*6/uL</div>
+
+        <div class="meter">
+          <div class="bar" aria-hidden="true">
+            <div class="bar-inner">
+              <div class="bar-yellow left"></div>
+              <div class="bar-green"></div>
+              <div class="bar-yellow right"></div>
+            </div>
+          </div>
+
+          <div
+            class="value-bubble value-normal interactive"
+            data-bubble-term="rbc_value"
+            data-value="5.17"
+            tabindex="0"
+            role="button"
+            aria-haspopup="true"
+          >
+            5.17
+          </div>
+
+          <div class="range-labels">
+            <span>3.8</span>
+            <span>5.3</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Hemoglobin -->
       <div class="card" data-min="12" data-max="16">
         <h4 class="card-title" data-term="hemoglobin" tabindex="0" role="button" aria-haspopup="true">Hemoglobin</h4>
+
         <div class="range-text">Normal range: 12.0 - 16.0 g/dL</div>
 
         <div class="meter">
@@ -29,17 +101,28 @@
             </div>
           </div>
 
-          <div class="value-bubble value-warning interactive" data-value="11.9" data-value-state="warning" data-bubble-term="hemoglobin-value" tabindex="0" role="button" aria-haspopup="true">11.9</div>
+          <div
+            class="value-bubble value-warning interactive"
+            data-bubble-term="hemoglobin_value"
+            data-value="11.9"
+            tabindex="0"
+            role="button"
+            aria-haspopup="true"
+          >
+            11.9
+          </div>
 
-          <div class="range-labels"><span>12</span><span>16</span></div>
+          <div class="range-labels">
+            <span>12</span>
+            <span>16</span>
+          </div>
         </div>
-
-        <div class="row-note">11.9 g/dL</div>
       </div>
 
       <!-- Hematocrit -->
       <div class="card" data-min="36" data-max="46">
         <h4 class="card-title" data-term="hematocrit" tabindex="0" role="button" aria-haspopup="true">Hematocrit</h4>
+
         <div class="range-text">Normal range: 36 - 46 %</div>
 
         <div class="meter">
@@ -51,15 +134,28 @@
             </div>
           </div>
 
-          <div class="value-bubble value-normal interactive" data-value="37" data-value-state="normal" data-bubble-term="hematocrit-value" tabindex="0" role="button" aria-haspopup="true">37</div>
+          <div
+            class="value-bubble value-warning interactive"
+            data-bubble-term="hematocrit_value"
+            data-value="37"
+            tabindex="0"
+            role="button"
+            aria-haspopup="true"
+          >
+            37
+          </div>
 
-          <div class="range-labels"><span>36</span><span>46</span></div>
+          <div class="range-labels">
+            <span>36</span>
+            <span>46</span>
+          </div>
         </div>
       </div>
 
       <!-- MCV -->
       <div class="card" data-min="80" data-max="100">
         <h4 class="card-title" data-term="mcv" tabindex="0" role="button" aria-haspopup="true">MCV</h4>
+
         <div class="range-text">Normal range: 80 - 100 fL</div>
 
         <div class="meter">
@@ -71,17 +167,28 @@
             </div>
           </div>
 
-          <div class="value-bubble value-warning interactive" data-value="71" data-value-state="warning" data-bubble-term="mcv-value" tabindex="0" role="button" aria-haspopup="true">71</div>
+          <div
+            class="value-bubble value-warning interactive"
+            data-bubble-term="mcv_value"
+            data-value="71"
+            tabindex="0"
+            role="button"
+            aria-haspopup="true"
+          >
+            71
+          </div>
 
-          <div class="range-labels"><span>80</span><span>100</span></div>
+          <div class="range-labels">
+            <span>80</span>
+            <span>100</span>
+          </div>
         </div>
-
-        <div class="row-note">71 fL</div>
       </div>
 
       <!-- MCH -->
       <div class="card" data-min="27" data-max="33">
         <h4 class="card-title" data-term="mch" tabindex="0" role="button" aria-haspopup="true">MCH</h4>
+
         <div class="range-text">Normal range: 27 - 33 pg</div>
 
         <div class="meter">
@@ -93,17 +200,28 @@
             </div>
           </div>
 
-          <div class="value-bubble value-warning interactive" data-value="23" data-value-state="warning" data-bubble-term="mch-value" tabindex="0" role="button" aria-haspopup="true">23</div>
+          <div
+            class="value-bubble value-warning interactive"
+            data-bubble-term="mch_value"
+            data-value="23"
+            tabindex="0"
+            role="button"
+            aria-haspopup="true"
+          >
+            23
+          </div>
 
-          <div class="range-labels"><span>27</span><span>33</span></div>
+          <div class="range-labels">
+            <span>27</span>
+            <span>33</span>
+          </div>
         </div>
-
-        <div class="row-note">23 pg</div>
       </div>
 
       <!-- MCHC -->
       <div class="card" data-min="31" data-max="36">
         <h4 class="card-title" data-term="mchc" tabindex="0" role="button" aria-haspopup="true">MCHC</h4>
+
         <div class="range-text">Normal range: 31 - 36 g/dL</div>
 
         <div class="meter">
@@ -115,9 +233,21 @@
             </div>
           </div>
 
-          <div class="value-bubble value-normal interactive" data-value="32" data-value-state="normal" data-bubble-term="mchc-value" tabindex="0" role="button" aria-haspopup="true">32</div>
+          <div
+            class="value-bubble value-normal interactive"
+            data-bubble-term="mchc_value"
+            data-value="32"
+            tabindex="0"
+            role="button"
+            aria-haspopup="true"
+          >
+            32
+          </div>
 
-          <div class="range-labels"><span>31</span><span>36</span></div>
+          <div class="range-labels">
+            <span>31</span>
+            <span>36</span>
+          </div>
         </div>
 
         <div class="row-note">32 g/dL</div>
@@ -126,6 +256,7 @@
       <!-- RDW -->
       <div class="card" data-min="11.5" data-max="14.5">
         <h4 class="card-title" data-term="rdw" tabindex="0" role="button" aria-haspopup="true">RDW</h4>
+
         <div class="range-text">Normal range: 11.5 - 14.5 %</div>
 
         <div class="meter">
@@ -137,9 +268,21 @@
             </div>
           </div>
 
-          <div class="value-bubble value-warning interactive" data-value="17.1" data-value-state="warning" data-bubble-term="rdw-value" tabindex="0" role="button" aria-haspopup="true">17.1</div>
+          <div
+            class="value-bubble value-warning interactive"
+            data-bubble-term="rdw_value"
+            data-value="17.1"
+            tabindex="0"
+            role="button"
+            aria-haspopup="true"
+          >
+            17.1
+          </div>
 
-          <div class="range-labels"><span>11.5</span><span>14.5</span></div>
+          <div class="range-labels">
+            <span>11.5</span>
+            <span>14.5</span>
+          </div>
         </div>
 
         <div class="row-note">17.1 %</div>
@@ -150,7 +293,9 @@
     <section class="panel">
       <h3>Interpretation</h3>
       <p>
-        The pattern of low hematocrit and low MCV commonly suggests smaller red blood cells — often related to low iron stores. Hover or focus the titles or numbers for plain-language definitions and suggested next steps.
+        The pattern of low hematocrit and low MCV commonly suggests smaller red blood cells —
+        often related to low iron stores. Hover or focus the underlined titles and result
+        numbers for plain-language definitions and suggested next steps.
       </p>
     </section>
   </main>
